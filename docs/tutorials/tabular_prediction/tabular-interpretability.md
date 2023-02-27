@@ -1,6 +1,8 @@
 # Interpretable rule-based modeling
 :label:`sec_tabularinterpretability`
 
+*Note*: This functionality is experimental and may be removed/changed without warning in future. We recommend only using this functionality if your data has only numerical features. Categorical features will lead to confusing rules.
+
 *Note*: This addition was made through collaboration with [the Yu Group](https://www.stat.berkeley.edu/~yugroup/) of Statistics and EECS from UC Berkeley.
 
 **Tip**: Prior to reading this tutorial, it is recommended to have a basic understanding of the TabularPredictor API covered in :ref:`sec_tabularquick`.
@@ -12,18 +14,19 @@ In this tutorial, we will explain how to automatically use interpretable models 
 Begin by loading in data to predict. Note: interpretable rule-based modeling is currently only supported for binary classification.
 
 ```{.python .input}
-from autogluon.tabular import TabularDataset, TabularPredictor
+from autogluon.tabular import TabularDataset
+from autogluon.tabular.predictor import InterpretableTabularPredictor
 train_data = TabularDataset('https://autogluon.s3.amazonaws.com/datasets/Inc/train.csv')
 subsample_size = 500  # subsample subset of data for faster demo, try setting this to much larger values
 train_data = train_data.sample(n=subsample_size, random_state=0)
 train_data.head()
 ```
 
-Now, we create a predictor and fit it to the data. By specifying `presets='interpretable'`, we tell the predictor to fit only interpretable models.
+Now, we create an interpretable predictor and fit it to the data.
 
 ```{.python .input}
-predictor = TabularPredictor(label='class')
-predictor.fit(train_data, presets='interpretable')
+predictor = InterpretableTabularPredictor(label='class')
+predictor.fit(train_data)
 predictor.leaderboard()
 ```
 
@@ -33,12 +36,9 @@ The rule-based models take slightly different forms (see below), but all try to 
 
 ![](https://raw.githubusercontent.com/csinva/imodels/master/docs/img/model_table_rules.png)
 
-Specifically, the interpretable preset fits different hyperparameter configurations of 5 models types:
-1. Greedy CART decision tree - returns a tree learned via greedy optimization ([Description](https://scikit-learn.org/stable/modules/tree.html#tree), [Paper](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone))
-2. Hierarchical Shrinkage tree - returns regularized version of CART decision tree ([Description](https://csinva.io/imodels/shrinkage.html), [Paper](https://arxiv.org/abs/2202.00858))
-3. Fast interpretable greedy-tree sum - returns a *sum* of trees, which are greedily grown simultaneously ([Description](https://csinva.io/imodels/figs.html), [Paper](https://arxiv.org/abs/2202.00858))
-4. RuleFit - returns a set of weighted rules, which are learned by a sparse linear model on rules extracted from decision trees ([Description](https://christophm.github.io/interpretable-ml-book/rulefit.html), [Paper](https://arxiv.org/abs/0811.1679))
-5. Boosted rule set - returns a set of rules, which are learned sequentially via AdaBoost ([Description](https://scikit-learn.org/stable/modules/ensemble.html#adaboost), [Paper](https://www.sciencedirect.com/science/article/pii/S002200009791504X)) 
+Specifically, the interpretable preset fits different hyperparameter configurations of 2 models types:
+1. Fast interpretable greedy-tree sum - returns a *sum* of trees, which are greedily grown simultaneously ([Description](https://csinva.io/imodels/figs.html), [Paper](https://arxiv.org/abs/2202.00858))
+2. RuleFit - returns a set of weighted rules, which are learned by a sparse linear model on rules extracted from decision trees ([Description](https://christophm.github.io/interpretable-ml-book/rulefit.html), [Paper](https://arxiv.org/abs/0811.1679))
 
 
 In addition to the usual functions in `TabularPredictor`, this predictor fitted with interpretable models has some additional functionality. For example, we can now inspect the complexity of the fitted models (i.e. how many rules they contain).
